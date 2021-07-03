@@ -61,12 +61,13 @@ class ReduceSideJobEx(MRJob):
             elif relation == 'DE':  # details data
                 detail_tuples.append(value[1])
             else:
-                pass  # TODO handle error
+                raise ValueError('An unexpected join key was encountered.')
         if self.options.join_type == 'inner':
             if len(order_tuples) > 0 and len(detail_tuples) > 0:
                 for order_values in order_tuples:
-                    output = [key] + [o for o in order_values] + [details_values]
-                    yield None, output
+                    for details_values in detail_tuples:
+                        output = [key] + [o for o in order_values] + [details_values]
+                        yield None, output
         elif self.options.join_type == 'left_outer':
             if len(order_tuples) > 0:
                 for order_values in order_tuples:
@@ -88,6 +89,8 @@ class ReduceSideJobEx(MRJob):
                 else:
                     output = [key] + ['null','null'] + [count, total]
                     yield None, output
+        else:
+            raise ValueError('An unexpected join type was encountered. This should not happen.')
 
 if __name__ == '__main__':
     ReduceSideJobEx.run()
